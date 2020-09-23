@@ -1,4 +1,4 @@
-class Negociacao {
+export class Negociacao {
 
     constructor(
         private _data: Date,
