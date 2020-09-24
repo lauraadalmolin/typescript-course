@@ -12,7 +12,7 @@ export class Negociacoes {
     paraArray(): Negociacao[] {
         // criando novo array para não permitir que o array
         // original seja excluído
-        return [].concat(this._negociacoes);
+        return ([] as Negociacao[]).concat(this._negociacoes);
     }
 
 }
