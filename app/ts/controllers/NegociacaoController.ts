@@ -1,6 +1,9 @@
 import { NegociacoesView, MensagemView } from '../views/index';
-import { Negociacoes, Negociacao } from '../models/index';
-import { domInject } from '../helpers/decorators/index';
+import { Negociacoes, Negociacao, NegociacaoParcial } from '../models/index';
+import { HandlerFunction, NegociacaoService } from '../services/index';
+import { domInject, throttle } from '../helpers/decorators/index';
+
+let timer = 0;
 
 export class NegociacaoController {
     
@@ -17,12 +20,14 @@ export class NegociacaoController {
     private _negociacoesView = new NegociacoesView('#negociacoesView');
     private _mensagemView = new MensagemView('#mensagemView');
 
+    private _negociacaoService = new NegociacaoService();
+
     constructor() {
         this._negociacoesView.update(this._negociacoes)
     }
 
-    adiciona(event: Event) {
-        event.preventDefault();
+    @throttle()
+    adiciona() {
         
         let data = new Date(this._inputData.val().replace(/-/g, ','));
         
@@ -41,6 +46,28 @@ export class NegociacaoController {
         this._negociacoesView.update(this._negociacoes)
         this._mensagemView.update('Negociação adicionada com sucesso!')
         
+    }
+
+    @throttle()
+    importData() {
+        const isOk: HandlerFunction = (res: Response) => {
+            if (res.ok) {
+                return res;
+            } else {
+                throw new Error(res.statusText);
+            }
+        }
+
+        clearTimeout(timer);
+
+        this._negociacaoService
+            .obterNegociacoes(isOk)
+            .then(negociacoes => {
+                negociacoes.forEach(negociacao => 
+                    this._negociacoes.adiciona(negociacao))
+
+                this._negociacoesView.update(this._negociacoes)
+            })
     }
 
     private isBusinessDay(data: Date) {
